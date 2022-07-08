@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from sqlalchemy.util.compat import b
 from config.db import conn
 from models.index import users
@@ -12,6 +12,12 @@ user = APIRouter()
 @user.get("/fetchall")
 async def read_data():
     return conn.execute(users.select()).fetchall()
+
+
+@user.get("/fetch/userProfile/{id}")
+async def get_user_profile(id: int):
+    return conn.execute(
+        users.select().where(users.c.id == id)).fetchone()
 
 
 @user.get("/fetch/userBalance/{id}")
@@ -67,6 +73,10 @@ async def send_balance(id: int, name: str, amountToSend: SendMoney):
         users.select().where(users.c.id == id)).fetchone()
     fieldName = conn.execute(
         users.select().where(users.c.name == name)).fetchone()
+    print(fieldName['name'].strip())
+    print("name of sender", amountToSend.name)
+    print("senderBalance", senderBalance['balance'])
+    print("amount to send", amountToSend.balance)
     if fieldName['name'].strip() == amountToSend.name:
         if senderBalance['balance'] > amountToSend.balance:
             substractedAmount = senderBalance['balance'] - amountToSend.balance
@@ -83,9 +93,15 @@ async def send_balance(id: int, name: str, amountToSend: SendMoney):
             )
             conn.execute(stmtsender)
             conn.execute(stmtreceiver)
-            return {"msg":"Funds sent"}
+            return {"msg": "Funds sent"}
         else:
-            return {"msg":"Not enough funds to send"}
+            return {"msg": "Not enough funds to send"}
+    # else:
+    #     raise HTTPException(
+    #     status_code=404,
+    #     detail=f"user with id: {id} does not exist"
+    # )
+    #     return
 
 
 @user.delete("/delete/user/{id}")
