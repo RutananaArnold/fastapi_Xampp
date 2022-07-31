@@ -8,5 +8,6 @@ users = Table(
     Column('name', String(255)),
     Column('email', String(255)),
     Column('password', String(255)),
-    Column('balance', Integer)
+    Column('balance', Integer),
+    Column('accountNumber', String(255)),
 )
